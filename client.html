@@ -51,6 +51,8 @@
 
       var messageField = document.getElementById('message');
 
+      var isConnected = false;
+
       function appendLog(type, nickname, message) {
         var messages = document.getElementById('messages');
         var messageElem = document.createElement('li');
@@ -76,6 +78,12 @@
 
         } else if(data.type == 'clear-typing') {
 
+        } else if(data.type == 'waiting') {
+          console.log('wating...');
+        }
+        else if(data.type == 'connected') {
+          isConnected = true;
+          console.log('connected');
         }
         else {
           appendLog(data.type, data.nickname, data.message);
@@ -116,6 +124,15 @@
           clearTyping();
         }
       });
+
+    //  var handle = setInterval(function() {
+
+    //     if(!isConnected) {
+    //       if (ws.readyState === WebSocket.OPEN) {
+    //         ws.send(JSON.stringify({'event': 'reconnect', message:  ''}));
+    //       }
+    //     }
+    //   }, 800);
 
       function disconnect() {
         ws.close();

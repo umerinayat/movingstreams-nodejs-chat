@@ -3,41 +3,132 @@ const WebSocketServer = WebSocket.Server;
 const uuid = require('node-uuid');
 
 const wss = new WebSocketServer({ port: 8181 });
-const clients = [];
 
-function wsSend(type, client_uuid, nickname, message) {
-    clients.forEach((client) => {
-        const clientSocket = client.ws;
-        if (clientSocket.readyState === WebSocket.OPEN) {
-            clientSocket.send(
-                JSON.stringify({
-                    type: type,
-                    id: client_uuid,
-                    nickname: nickname,
-                    message: message,
-                })
-            );
+let clients = [];
+
+function wsSend(type, client_uuid, nickname, message, client) {
+
+    if (client) {
+        if (client.unknowClient) {
+            let clientSocket = client.ws;
+            if (clientSocket.readyState === WebSocket.OPEN) {
+
+                if (type == 'typing' || type == 'clear-typing') {
+
+                } else {
+                    clientSocket.send(
+                        JSON.stringify({
+                            type: type,
+                            id: client_uuid,
+                            nickname: nickname,
+                            message: message,
+                        })
+                    );
+                }
+                
+
+            }
+
+            if (type == 'connected') {
+
+                let unknowClientWs = client.unknowClient.ws;
+
+                unknowClientWs.send(
+                    JSON.stringify({
+                        type: type,
+                        id: client.unknowClient.id,
+                        nickname: client.unknowClient.nickname,
+                        message: 'You are connected with: ' + client.id,
+                    })
+                );
+            }
+
+            if (type == 'message') {
+
+                let unknowClientWs = client.unknowClient.ws;
+
+                unknowClientWs.send(
+                    JSON.stringify({
+                        type: type,
+                        id: client_uuid,
+                        nickname: nickname,
+                        message: message,
+                    })
+                );
+            }
+
+            if (type == 'typing') {
+                let unknowClientWs = client.unknowClient.ws;
+
+                unknowClientWs.send(
+                    JSON.stringify({
+                        type: type,
+                        id: client_uuid,
+                        nickname: nickname,
+                        message: message,
+                    })
+                );
+            }
+
+            if (type == 'clear-typing') {
+                let unknowClientWs = client.unknowClient.ws;
+
+                unknowClientWs.send(
+                    JSON.stringify({
+                        type: type,
+                        id: client_uuid,
+                        nickname: nickname,
+                        message: message,
+                    })
+                );
+            }
         }
-    });
+    }
+
 }
 
 let clientIndex = 1;
 
 wss.on('connection', (ws) => {
+
     const client_uuid = uuid.v4();
     let nickname = 'AnonymousUser' + clientIndex;
     clientIndex += 1;
 
-    clients.push({ id: client_uuid, ws: ws, nickname: nickname });
+    let unknowClient = clients.find(c => {
+        return c.id != client_uuid && c.unknowClient == null;
+    });
 
-    console.log('client [%s] connected', client_uuid);
+    if (unknowClient) {
+        let client = { id: client_uuid, ws: ws, nickname: nickname, unknowClient: unknowClient };
+        unknowClient = { ...unknowClient, unknowClient: client };
 
-    const connect_message = nickname + ' has connected';
+        clients = clients.map(c => {
+            if (c.id == unknowClient.id) {
+                return unknowClient;
+            }
+            return c;
+        });
 
-    wsSend('notification', client_uuid, nickname, connect_message);
+        clients.push(client);
+
+        wsSend('connected', client_uuid, nickname, 'You are connected with: ' + unknowClient.id, client);
+    } else {
+        let client = { id: client_uuid, ws: ws, nickname: nickname, unknowClient: null };
+        clients.push(client);
+        wsSend('waiting', client_uuid, nickname, 'Please Wait...', client);
+    }
+
+    // console.log('client [%s] connected', client_uuid);
+
+    // const connect_message = nickname + ' has connected';
+
+    // wsSend('notification', client_uuid, nickname, connect_message);
 
     ws.on('message', (message) => {
         let parsedMesg = JSON.parse(message.toString());
+        let c = clients.find(c => c.id == client_uuid);
+
 
         if (parsedMesg.event == 'message') {
             let msg = parsedMesg.message;
@@ -49,15 +140,17 @@ wss.on('connection', (ws) => {
                     nickname = nickname_array[1];
                     let nickname_message =
                         'Client ' + old_nickname + ' changed to ' + nickname;
-                    wsSend('nick_update', client_uuid, nickname, nickname_message);
+
+                    wsSend('nick_update', client_uuid, nickname, nickname_message, c);
                 }
             } else {
-                wsSend('message', client_uuid, nickname, msg);
+                wsSend('message', client_uuid, nickname, msg, c);
             }
-        } else if(parsedMesg.event == 'typing') {
-            wsSend('typing', client_uuid, nickname, 'typing...');
-        } else if(parsedMesg.event  == 'clear-typing') {
-            wsSend('clear-typing', client_uuid, nickname, 'clear typing');
+        } else if (parsedMesg.event == 'typing') {
+            wsSend('typing', client_uuid, nickname, 'typing...', c);
+        } else if (parsedMesg.event == 'clear-typing') {
+            wsSend('clear-typing', client_uuid, nickname, 'clear typing', c);
+        } else if (parsedMesg.event == 'reconnect') {
         }
     });
 
