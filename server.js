@@ -2,124 +2,76 @@ const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const uuid = require('node-uuid');
 
+const ClientSocket = require('./ClientSocket');
+const Event = require('./Event');
+
 const wss = new WebSocketServer({ port: 8181 });
 
-let clients = [];
+const connections = new Map();
 
-function wsSend(type, client_uuid, nickname, message, client) {
-
-    if (client) {
-        if (client.unknowClient) {
-            let clientSocket = client.ws;
-            if (clientSocket.readyState === WebSocket.OPEN) {
-
-                if (type == 'typing' || type == 'clear-typing') {
-
-                } else {
-                    clientSocket.send(
-                        JSON.stringify({
-                            type: type,
-                            id: client_uuid,
-                            nickname: nickname,
-                            message: message,
-                        })
-                    );
-                }
-                
-
-            }
-
-            if (type == 'connected') {
-
-                let unknowClientWs = client.unknowClient.ws;
-
-                unknowClientWs.send(
-                    JSON.stringify({
-                        type: type,
-                        id: client.unknowClient.id,
-                        nickname: client.unknowClient.nickname,
-                        message: 'You are connected with: ' + client.id,
-                    })
-                );
-            }
-
-            if (type == 'message') {
-
-                let unknowClientWs = client.unknowClient.ws;
-
-                unknowClientWs.send(
-                    JSON.stringify({
-                        type: type,
-                        id: client_uuid,
-                        nickname: nickname,
-                        message: message,
-                    })
-                );
-            }
-
-            if (type == 'typing') {
-                let unknowClientWs = client.unknowClient.ws;
-
-                unknowClientWs.send(
-                    JSON.stringify({
-                        type: type,
-                        id: client_uuid,
-                        nickname: nickname,
-                        message: message,
-                    })
-                );
-            }
-
-            if (type == 'clear-typing') {
-                let unknowClientWs = client.unknowClient.ws;
-
-                unknowClientWs.send(
-                    JSON.stringify({
-                        type: type,
-                        id: client_uuid,
-                        nickname: nickname,
-                        message: message,
-                    })
-                );
-            }
-        }
-    }
-
-}
-
-let clientIndex = 1;
+process.setMaxListeners(0);
 
 wss.on('connection', (ws) => {
 
-    const client_uuid = uuid.v4();
-    let nickname = 'AnonymousUser' + clientIndex;
-    clientIndex += 1;
+    const cuuid = uuid.v4();
+    const newClientSocket = new ClientSocket(cuuid, 'AnonymousUser', null, ws);
+    connections.set(newClientSocket.uuid, newClientSocket);
 
-    let unknowClient = clients.find(c => {
-        return c.id != client_uuid && c.unknowClient == null;
-    });
+    let isConnected = false;
 
-    if (unknowClient) {
-        let client = { id: client_uuid, ws: ws, nickname: nickname, unknowClient: unknowClient };
-        unknowClient = { ...unknowClient, unknowClient: client };
+    for (let [uuid, clientSocket] of connections) {
+        if (uuid != newClientSocket.uuid && clientSocket.privateSocket == null) {
+            clientSocket.privateSocket = newClientSocket;
+            newClientSocket.privateSocket = clientSocket;
 
-        clients = clients.map(c => {
-            if (c.id == unknowClient.id) {
-                return unknowClient;
-            }
-            return c;
-        });
+            newClientSocket.send(new Event({
+                type: 'notification',
+                message: `You are connected with: ${clientSocket.nickname}`,
+                data: {
+                    client: {
+                        uuid: newClientSocket.uuid,
+                        nickname: newClientSocket.nickname
+                    },
+                    private: {
+                        uuid: clientSocket.uuid,
+                        nickname: clientSocket.nickname
+                    }
+                }
+            }));
 
-        clients.push(client);
+            clientSocket.send(new Event({
+                type: 'notification',
+                message: `You are connected with: ${newClientSocket.nickname}`,
+                data: {
+                    client: {
+                        uuid: clientSocket.uuid,
+                        nickname: clientSocket.nickname
+                    },
+                    private: {
+                        uuid: newClientSocket.uuid,
+                        nickname: newClientSocket.nickname
+                    }
+                }
+            }));
 
-        wsSend('connected', client_uuid, nickname, 'You are connected with: ' + unknowClient.id, client);
-    } else {
-        let client = { id: client_uuid, ws: ws, nickname: nickname, unknowClient: null };
-        clients.push(client);
-        wsSend('waiting', client_uuid, nickname, 'Please Wait...', client);
+            isConnected = true;
+            break;
+        }
     }
 
-    // console.log('client [%s] connected', client_uuid);
+    if (!isConnected) {
+        newClientSocket.send(new Event({
+            type: 'waiting',
+            message: `Please Wait...`,
+            data: {
+                client: {
+                    uuid: newClientSocket.uuid,
+                    nickname: newClientSocket.nickname
+                },
+            }
+        }
+        ));
+    }
 
     // const connect_message = nickname + ' has connected';
 
@@ -127,46 +79,122 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         let parsedMesg = JSON.parse(message.toString());
-        let c = clients.find(c => c.id == client_uuid);
+        let clientSocket = connections.get(cuuid);
 
+        if (clientSocket) {
+            if (parsedMesg.event == 'message') {
+                let msg = parsedMesg.message;
+                if (msg.indexOf('/nick') === 0) {
+                    let nickname_array = msg.split(' ');
+                    if (nickname_array.length >= 2) {
+                        let old_nickname = clientSocket.nickname;
+                        clientSocket.nickname = nickname_array[1];
+                        let nickname_message =
+                            'Client ' + old_nickname + ' changed to ' + clientSocket.nickname;
 
-        if (parsedMesg.event == 'message') {
-            let msg = parsedMesg.message;
-            if (msg.indexOf('/nick') === 0) {
-                let nickname_array = msg.split(' ');
+                        if (clientSocket.privateSocket) {
+                            clientSocket.privateSocket.send(new Event({
+                                type: 'nick_update',
+                                message: nickname_message,
+                                data: {
+                                    client: {
+                                        uuid: clientSocket.uuid,
+                                        nickname: clientSocket.nickname
+                                    }
+                                }
+                            }));
+                        }
+                    }
+                } else {
+                    if (clientSocket.privateSocket) {
+                        clientSocket.send(new Event({
+                            type: 'message',
+                            message: msg,
+                            data: {
+                                client: {
+                                    uuid: clientSocket.uuid,
+                                    nickname: clientSocket.nickname
+                                }
+                            }
+                        }));
 
-                if (nickname_array.length >= 2) {
-                    let old_nickname = nickname;
-                    nickname = nickname_array[1];
-                    let nickname_message =
-                        'Client ' + old_nickname + ' changed to ' + nickname;
-
-                    wsSend('nick_update', client_uuid, nickname, nickname_message, c);
+                        clientSocket.privateSocket.send(new Event({
+                            type: 'message',
+                            message: msg,
+                            data: {
+                                client: {
+                                    uuid: clientSocket.uuid,
+                                    nickname: clientSocket.nickname
+                                }
+                            }
+                        }));
+                    }
                 }
-            } else {
-                wsSend('message', client_uuid, nickname, msg, c);
             }
-        } else if (parsedMesg.event == 'typing') {
-            wsSend('typing', client_uuid, nickname, 'typing...', c);
-        } else if (parsedMesg.event == 'clear-typing') {
-            wsSend('clear-typing', client_uuid, nickname, 'clear typing', c);
-        } else if (parsedMesg.event == 'reconnect') {
+
+            else if (parsedMesg.event == 'typing') {
+                if (clientSocket.privateSocket) {
+                    clientSocket.privateSocket.send(new Event({
+                        type: 'typing',
+                        message: clientSocket.nickname + ' typing...',
+                        data: {
+                            client: {
+                                uuid: clientSocket.uuid,
+                                nickname: clientSocket.nickname
+                            }
+                        }
+                    }));
+                }
+            } else if (parsedMesg.event == 'clear-typing') {
+                if (clientSocket.privateSocket) {
+                    clientSocket.privateSocket.send(new Event({
+                        type: 'clear-typing',
+                        message: clientSocket.nickname + ' clear typing...',
+                        data: {
+                            client: {
+                                uuid: clientSocket.uuid,
+                                nickname: clientSocket.nickname
+                            }
+                        }
+                    }));
+                }
+            }
         }
+
+
+
     });
 
     var closeSocket = (customMessage) => {
-        for (var i = 0; i < clients.length; i++) {
-            if (clients[i].id == client_uuid) {
-                var disconnect_message;
-                if (customMessage) {
-                    disconnect_message = customMessage;
-                } else {
-                    disconnect_message = nickname + ' has disconnected';
-                }
-                wsSend('notification', client_uuid, nickname, disconnect_message);
-                clients.splice(i, 1);
+
+        const clientSocket = connections.get(cuuid);
+
+        if (clientSocket) {
+            if (clientSocket.privateSocket) {
+                clientSocket.privateSocket.send(new Event({
+                    type: 'notification',
+                    message: `${clientSocket.nickname} has been disconnected`,
+                    data: {
+                        client: {
+                            uuid: clientSocket.privateSocket.uuid,
+                            nickname: clientSocket.privateSocket.nickname
+                        },
+                        private: {
+                            uuid: clientSocket.uuid,
+                            nickname: clientSocket.nickname
+                        }
+                    }
+                }));
+
+                connections.delete(clientSocket.uuid);
+                connections.delete(clientSocket.privateSocket.uuid);
+
+            } else {
+                connections.delete(cuuid);
             }
         }
+
+
     };
 
     ws.on('close', function () {
@@ -178,4 +206,5 @@ wss.on('connection', (ws) => {
         closeSocket('Server has disconnected');
         process.exit();
     });
+
 });
