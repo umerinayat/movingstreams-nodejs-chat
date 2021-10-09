@@ -280,8 +280,10 @@
 
         if (data.type == 'typing') {
           typingStatus.style.display = 'block';
+          chat.scrollTop = chat.scrollHeight - chat.clientHeight;
         } else if (data.type == 'clear-typing') {
           typingStatus.style.display = 'none';
+          chat.scrollTop = chat.scrollHeight - chat.clientHeight;
         } else if (data.type == 'waiting') {
           appendLog(data, true);
         } else if (data.type == 'notification') {
