@@ -2,17 +2,15 @@ const express = require('express');
 const http = require('http');
 const sockjs = require('sockjs');
 const uuid = require('node-uuid');
-const cors = require('cors');
 
 const ClientSocket = require('./ClientSocket');
 const Event = require('./Event');
 
 const app = express();
-app.use(cors({
-    origin: ['http://movingstreams.com']
-}));
 const httpServer = http.createServer(app);
-const sockServer = sockjs.createServer();
+const sockServer = sockjs.createServer({
+    disable_cors: true
+});
 
 const CONNECTING = 0;
 const OPEN = 1;
