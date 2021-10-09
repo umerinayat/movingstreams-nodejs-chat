@@ -1,11 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Bi-directional WebSocket Chat Demo</title>
+    <title>Random Chat</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link href='/style.css' type='text/css' rel='stylesheet'>
+    <style>
+      #messages {
+    font-family: Century Gothic, sans-serif;
+    font-size: 2em;
+    color: #565656;
+  }
+
+  input#message {
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    -webkit-box-shadow: inset 0 0 1px 1px #f6f6f6;
+    box-shadow: inset 0 0 1px 1px #f6f6f6;
+    color: #333;
+    font: bold 24px/1 "Century Gothic", sans-serif;
+    padding-left: 5px;
+    text-shadow: 0 1px 0 #fff;
+    width: 450px;        
+  }
+
+  input#send {
+    background: #e3e3e3;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    -webkit-box-shadow: inset 0 0 1px 1px #f6f6f6;
+    box-shadow: inset 0 0 1px 1px #f6f6f6;
+    color: #333;
+    font: bold 12px/1 "Century Gothic", sans-serif;
+    padding: 8px 0 9px;
+    text-align: center;
+    text-shadow: 0 1px 0 #fff;
+    width: 150px;
+  }
+    </style>
 
   </head>
   <body lang="en">
@@ -31,7 +63,7 @@
 
     <script>
 
-      var sockjs = new SockJS("http://localhost:8181/chat");
+      var sockjs = new SockJS("http://movingstreams.com/chat");
       var nickname = '';
 
       sockjs.onopen = function (e) {
