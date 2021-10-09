@@ -6,7 +6,7 @@ const uuid = require('node-uuid');
 const ClientSocket = require('./ClientSocket');
 const Event = require('./Event');
 
-const options = {prefix:'/chat', sockjs_url: 'http://movingstreams.com/', disable_cors: true};
+const options = {prefix:'/chat', sockjs_url: 'http://www.movingstreams.com', disable_cors: true};
 
 const app = express();
 const httpServer = http.createServer(app);
