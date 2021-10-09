@@ -36,30 +36,43 @@ sockServer.on('connection', (ws) => {
 
             newClientSocket.send(new Event({
                 type: 'notification',
-                message: `You are connected with: ${clientSocket.nickname}`,
+                message: `You are <b> ${newClientSocket.nickname} </b>, If you want to change your name then type <b style='color: green'>  '/nick yourname' </b> in the message box and send it.`,
                 data: {
                     client: {
                         uuid: newClientSocket.uuid,
                         nickname: newClientSocket.nickname
                     },
-                    private: {
+                }
+            }));
+            
+            newClientSocket.send(new Event({
+                type: 'notification',
+                message: `You are connected with: <b>${clientSocket.nickname}</b>`,
+                data: {
+                    client: {
+                        uuid: newClientSocket.uuid,
+                        nickname: newClientSocket.nickname
+                    },
+                    connected: {
                         uuid: clientSocket.uuid,
-                        nickname: clientSocket.nickname
+                        nickname: clientSocket.nickname,
+                        message: `Hi, I am ${clientSocket.nickname} I would love to chat with you`
                     }
                 }
             }));
 
             clientSocket.send(new Event({
                 type: 'notification',
-                message: `You are connected with: ${newClientSocket.nickname}`,
+                message: `You are connected with: <b>${newClientSocket.nickname}</b>`,
                 data: {
                     client: {
                         uuid: clientSocket.uuid,
                         nickname: clientSocket.nickname
                     },
-                    private: {
+                    connected: {
                         uuid: newClientSocket.uuid,
-                        nickname: newClientSocket.nickname
+                        nickname: newClientSocket.nickname,
+                        message: `Hi, I am ${newClientSocket.nickname} I would love to chat with you`
                     }
                 }
             }));
@@ -72,7 +85,7 @@ sockServer.on('connection', (ws) => {
     if (!isConnected) {
         newClientSocket.send(new Event({
             type: 'waiting',
-            message: `Please Wait...`,
+            message: `You are <b> ${newClientSocket.nickname} </b>, If you want to change your name then type <b style='color: green'>  '/nick yourname' </b> in the message box and send it.`,
             data: {
                 client: {
                     uuid: newClientSocket.uuid,
@@ -102,10 +115,21 @@ sockServer.on('connection', (ws) => {
                         let nickname_message =
                             'Client ' + old_nickname + ' changed to ' + clientSocket.nickname;
 
+                            clientSocket.send(new Event({
+                                type: 'notification',
+                                message: `Your named has been changed now you are <b> ${clientSocket.nickname} </b>`,
+                                data: {
+                                    client: {
+                                        uuid: clientSocket.uuid,
+                                        nickname: clientSocket.nickname
+                                    }
+                                }
+                            }));
+
                         if (clientSocket.privateSocket) {
                             clientSocket.privateSocket.send(new Event({
-                                type: 'nick_update',
-                                message: nickname_message,
+                                type: 'notification',
+                                message: `Your partner <b>${old_nickname}</b> has changed their name to <b>${clientSocket.nickname}</b>`,
                                 data: {
                                     client: {
                                         uuid: clientSocket.uuid,
@@ -117,6 +141,7 @@ sockServer.on('connection', (ws) => {
                     }
                 } else {
                     if (clientSocket.privateSocket) {
+                        
                         clientSocket.send(new Event({
                             type: 'message',
                             message: msg,
@@ -135,7 +160,8 @@ sockServer.on('connection', (ws) => {
                                 client: {
                                     uuid: clientSocket.uuid,
                                     nickname: clientSocket.nickname
-                                }
+                                },
+                                private: {}
                             }
                         }));
                     }
@@ -183,19 +209,20 @@ sockServer.on('connection', (ws) => {
             if (clientSocket.privateSocket) {
                 clientSocket.privateSocket.send(new Event({
                     type: 'notification',
-                    message: `${clientSocket.nickname} has been disconnected`,
+                    message: `<b>${clientSocket.nickname}</b> has been disconnected`,
                     data: {
                         client: {
                             uuid: clientSocket.uuid,
                             nickname: clientSocket.nickname
-                        }
+                        },
+                        private: {}
                     }
                 }));
 
                 clientSocket.privateSocket.privateSocket = null;
                 clientSocket.privateSocket.send(new Event({
-                    type: 'waiting',
-                    message: `Please Wait Connecting With new Friend`,
+                    type: 'notification',
+                    message: `Please Wait Connecting With New Friend`,
                     data: {
                         client: {
                             uuid: clientSocket.privateSocket.uuid,
@@ -233,8 +260,4 @@ httpServer.listen(8181, '0.0.0.0');
 
 app.get('/random-chat', function (req, res) {
     res.sendFile(__dirname + '/client.html');
-});
-
-app.get('/style.css', function (req, res) {
-    res.sendFile(__dirname + '/style.css');
 });

@@ -6,65 +6,219 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <style>
-      #messages {
-    font-family: Century Gothic, sans-serif;
-    font-size: 2em;
-    color: #565656;
-  }
+      @import url('https://fonts.googleapis.com/css?family=Red+Hat+Display:400,500,900&display=swap');
+      body,
+      html {
+        font-family: Red hat Display, sans-serif;
+        font-weight: 400;
+        line-height: 1.25em;
+        letter-spacing: 0.025em;
+        color: #333;
+        background: #f7f7f7;
+      }
 
-  input#message {
-    border: 1px solid #bbb;
-    border-radius: 3px;
-    -webkit-box-shadow: inset 0 0 1px 1px #f6f6f6;
-    box-shadow: inset 0 0 1px 1px #f6f6f6;
-    color: #333;
-    font: bold 24px/1 "Century Gothic", sans-serif;
-    padding-left: 5px;
-    text-shadow: 0 1px 0 #fff;
-    width: 450px;        
-  }
+      .center {
+        height: 75vh;
+        width: 70%;
+      }
 
-  input#send {
-    background: #e3e3e3;
-    border: 1px solid #bbb;
-    border-radius: 3px;
-    -webkit-box-shadow: inset 0 0 1px 1px #f6f6f6;
-    box-shadow: inset 0 0 1px 1px #f6f6f6;
-    color: #333;
-    font: bold 12px/1 "Century Gothic", sans-serif;
-    padding: 8px 0 9px;
-    text-align: center;
-    text-shadow: 0 1px 0 #fff;
-    width: 150px;
-  }
+      .chat {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 70%;
+        height: 100%;
+        z-index: 2;
+        box-sizing: border-box;
+        border-radius: 1rem;
+        background: white;
+        box-shadow: 0 0 8rem 0 rgba(0, 0, 0, 0.1),
+          0rem 2rem 4rem -3rem rgba(0, 0, 0, 0.5);
+      }
+     
+      .chat .messages {
+        height: 100%;
+        padding: 1rem;
+        background: #f7f7f7;
+        flex-shrink: 2;
+        overflow-y: auto;
+        box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.05),
+          inset 0 -2rem 2rem -2rem rgba(0, 0, 0, 0.05);
+      }
+      .chat .messages .time {
+        font-size: 0.8rem;
+        background: #eee;
+        padding: 0.25rem 1rem;
+        border-radius: 2rem;
+        color: #999;
+        width: -webkit-fit-content;
+        width: -moz-fit-content;
+        width: fit-content;
+        margin: 0 auto;
+      }
+      .chat .messages .message {
+        box-sizing: border-box;
+        padding: 0.5rem 1rem;
+        margin: 1rem;
+        background: #fff;
+        border-radius: 1.125rem 1.125rem 1.125rem 0;
+        min-height: 2.25rem;
+        width: -webkit-fit-content;
+        width: -moz-fit-content;
+        width: fit-content;
+        max-width: 66%;
+        box-shadow: 0 0 2rem rgba(0, 0, 0, 0.075),
+          0rem 1rem 1rem -1rem rgba(0, 0, 0, 0.1);
+      }
+      .chat .messages .message.parker {
+        margin: 1rem 1rem 1rem auto;
+        border-radius: 1.125rem 1.125rem 0 1.125rem;
+        background: #333;
+        color: white;
+      }
+      .chat .messages .message .typing {
+        display: inline-block;
+        width: 0.8rem;
+        height: 0.8rem;
+        margin-right: 0rem;
+        box-sizing: border-box;
+        background: #ccc;
+        border-radius: 50%;
+      }
+      .chat .messages .message .typing.typing-1 {
+        -webkit-animation: typing 3s infinite;
+        animation: typing 3s infinite;
+      }
+      .chat .messages .message .typing.typing-2 {
+        -webkit-animation: typing 3s 250ms infinite;
+        animation: typing 3s 250ms infinite;
+      }
+      .chat .messages .message .typing.typing-3 {
+        -webkit-animation: typing 3s 500ms infinite;
+        animation: typing 3s 500ms infinite;
+      }
+      .chat .input {
+        box-sizing: border-box;
+        flex-basis: 4rem;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 0.5rem 0 1.5rem;
+      }
+      .chat .input i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        color: #666;
+        cursor: pointer;
+        transition: color 200ms;
+      }
+      .chat .input i:hover {
+        color: #333;
+      }
+      .chat .input input {
+        border: none;
+        background-image: none;
+        background-color: white;
+        padding: 0.5rem 1rem;
+        margin-right: 1rem;
+        border-radius: 1.125rem;
+        flex-grow: 2;
+        box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1),
+          0rem 1rem 1rem -1rem rgba(0, 0, 0, 0.2);
+        font-family: Red hat Display, sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.025em;
+      }
+      .chat .input input:placeholder {
+        color: #999;
+      }
+
+      @-webkit-keyframes typing {
+        0%,
+        75%,
+        100% {
+          transform: translate(0, 0.25rem) scale(0.9);
+          opacity: 0.5;
+        }
+        25% {
+          transform: translate(0, -0.25rem) scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes typing {
+        0%,
+        75%,
+        100% {
+          transform: translate(0, 0.25rem) scale(0.9);
+          opacity: 0.5;
+        }
+        25% {
+          transform: translate(0, -0.25rem) scale(1);
+          opacity: 1;
+        }
+      }
+      .pic.stark {
+        background-image: url('https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/7/73/SMH_Mentor_6.png');
+      }
+
+      .pic.banner {
+        background-image: url('https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/4/4f/BruceHulk-Endgame-TravelingCapInPast.jpg');
+      }
+
+      .pic.thor {
+        background-image: url('https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/9/98/ThorFliesThroughTheAnus.jpg');
+      }
+
+      .pic.danvers {
+        background-image: url('https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/0/05/HeyPeterParker.png');
+      }
+
+      .pic.rogers {
+        background-image: url('https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/7/7c/Cap.America_%28We_Don%27t_Trade_Lives_Vision%29.png');
+      }
     </style>
-
   </head>
   <body lang="en">
+    <div class="center">
+      <div class="chat">
+        <div class="messages" id="messages">
 
-    <ul id="messages"></ul>
 
-    <p id="typingStatus"></p>
-    <form id="chat_form" onsubmit="sendMessage(); return false;">
-      <input
-        type="text"
-        id="message"
-        name="message"
-        id="message"
-        placeholder="Type text to echo in here"
-        value=""
-        autofocus
-      />
-      <input type="button" id="send" value="Send!" onclick="sendMessage();" />
-      <!-- <input type="button" value="Disconnect" onclick="disconnect();" /> -->
-    </form>
+          <div class="message parker" id="typingStatus" style="display: none;">
+            <div class="typing typing-1"></div>
+            <div class="typing typing-2"></div>
+            <div class="typing typing-3"></div>
+          </div>
+          
+        </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js" integrity="sha512-ayb5R/nKQ3fgNrQdYynCti/n+GD0ybAhd3ACExcYvOR2J1o3HebiAe/P0oZDx5qwB+xkxuKG6Nc0AFTsPT/JDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        
+       
+        <form id="chat_form" onsubmit="sendMessage(); return false;" class="input">
+          <input name="message" id="message" placeholder="Type your message here!" type="text" value="" autofocus />
+          <input type="button" id="send" value="Send!" onclick="sendMessage();"/>
+      </form>
+        
+      
+      </div>
+    </div>
+ 
+  
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"
+      integrity="sha512-ayb5R/nKQ3fgNrQdYynCti/n+GD0ybAhd3ACExcYvOR2J1o3HebiAe/P0oZDx5qwB+xkxuKG6Nc0AFTsPT/JDQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
 
     <script>
-
       var sockjs = new SockJS("http://movingstreams.com/chat");
       var nickname = '';
+
+      var chat = document.getElementById('messages');
+      chat.scrollTop = chat.scrollHeight - chat.clientHeight;
 
       sockjs.onopen = function (e) {
         console.log('Connection to server opened');
@@ -73,29 +227,69 @@
       var messageField = document.getElementById('message');
       var typingStatus = document.getElementById('typingStatus');
 
-      function appendLog(nickname, message) {
-          var messages = document.getElementById('messages');
-          var messageElem = document.createElement("li");
-          var message_text = "[" + nickname + "] - " + message;
-          messageElem.innerHTML = message_text;
-          messages.appendChild(messageElem);
+      function appendLog(data, isWaiting=false, isMessage=false, isNotification=false) {
+        
+        var msg = document.createElement('div');
+
+        var html = ``;
+
+        if(isMessage) {
+          html += `<b>${data.data.client.nickname}:</b>`;
+        }
+
+        html += ` ${data.message}`;
+
+        msg.classList.add('message');
+
+        if('private' in  data.data) {
+          msg.classList.add('parker');
+        } else {
+          msg.classList.add('stark');
+        }
+       
+
+        msg.innerHTML = html;
+        chat.insertBefore(msg , typingStatus);
+
+        
+
+        if('connected' in data.data) {
+          var msg = document.createElement('div');
+          msg.classList.add('message');
+          msg.classList.add('parker');
+          msg.innerHTML = `${data.data.connected.message}`;
+          chat.insertBefore(msg, typingStatus);
+        }
+
+        if(isWaiting) {
+          var msg = document.createElement('div');
+          msg.classList.add('message');
+          msg.classList.add('stark');
+          msg.innerHTML = `Please Wait Connecting With Friend...`;
+          chat.appendChild(msg);
+        }
+
+        chat.scrollTop = chat.scrollHeight - chat.clientHeight;
+
       }
 
       sockjs.onmessage = function (e) {
         var data = JSON.parse(e.data);
         data = data.event;
-        debugger;
-
+     
         nickname = data.nickname;
 
         if (data.type == 'typing') {
-         typingStatus.innerHTML  = data.message;
+          typingStatus.style.display = 'block';
         } else if (data.type == 'clear-typing') {
-         typingStatus.innerHTML = '';
+          typingStatus.style.display = 'none';
         } else if (data.type == 'waiting') {
-          appendLog('Connecting', data.message);
-        } else {
-          appendLog(data.data.client.nickname, data.message);
+          appendLog(data, true);
+        } else if (data.type == 'notification') {
+          appendLog(data, false, false, true);
+        }
+        else {
+          appendLog(data, false, true);
         }
 
         console.log('ID: [%s] = %s', data.data.client.uuid, data.message);
@@ -104,7 +298,7 @@
       sockjs.onclose = function (e) {
         appendLog('Connection closed');
         console.log('Connection closed');
-        typingStatus.innerHTML = '';
+        typingStatus.style.display = 'none';
       };
 
       function sendTyping() {
@@ -116,9 +310,9 @@
       }
 
       function sendMessage() {
-          sockjs.send(
-            JSON.stringify({ event: 'message', message: messageField.value })
-          );
+        sockjs.send(
+          JSON.stringify({ event: 'message', message: messageField.value })
+        );
         messageField.value = '';
         messageField.focus();
         clearTyping();
