@@ -197,7 +197,7 @@
         <div class="messages" id="messages">
 
 
-          <div class="message parker" id="typingStatus" style="display: none;">
+          <div class="message stark" id="typingStatus" style="display: none;">
             <div class="typing typing-1"></div>
             <div class="typing typing-2"></div>
             <div class="typing typing-3"></div>
@@ -253,9 +253,9 @@
         msg.classList.add('message');
 
         if('private' in  data.data) {
-          msg.classList.add('parker');
-        } else {
           msg.classList.add('stark');
+        } else { 
+          msg.classList.add('parker');
         }
        
 
@@ -267,7 +267,7 @@
         if('connected' in data.data) {
           var msg = document.createElement('div');
           msg.classList.add('message');
-          msg.classList.add('parker');
+          msg.classList.add('stark');
           msg.innerHTML = `${data.data.connected.message}`;
           chat.insertBefore(msg, typingStatus);
         }
@@ -275,7 +275,7 @@
         if(isWaiting) {
           var msg = document.createElement('div');
           msg.classList.add('message');
-          msg.classList.add('stark');
+          msg.classList.add('parker');
           msg.innerHTML = `Please Wait Connecting With Friend...`;
           chat.insertBefore(msg, typingStatus);
         }
