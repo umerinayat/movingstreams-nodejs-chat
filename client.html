@@ -248,7 +248,7 @@
           msg.classList.add('message');
           msg.classList.add('stark');
           msg.innerHTML = `Please Wait Connecting With Friend...`;
-          chat.insertBefore(msg);
+          chat.insertBefore(msg, typingStatus);
         }
 
         chat.scrollTop = chat.scrollHeight - chat.clientHeight;
