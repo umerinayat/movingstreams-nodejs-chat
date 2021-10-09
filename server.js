@@ -8,7 +8,7 @@ const Event = require('./Event');
 
 const app = express();
 const httpServer = http.createServer(app);
-const sockServer = sockjs.createServer();
+const sockServer = sockjs.createServer({prefix:'/chat', sockjs_url: 'http://movingstreams.com/', disable_cors: true});
 
 const CONNECTING = 0;
 const OPEN = 1;
@@ -224,7 +224,7 @@ sockServer.on('connection', (ws) => {
 });
 
 
-sockServer.installHandlers(httpServer, {prefix:'/chat'});
+sockServer.installHandlers(httpServer, {prefix:'/chat', sockjs_url: 'http://movingstreams.com/', disable_cors: true});
 
 console.log(' [*] Listening on 0.0.0.0:8181' );
 httpServer.listen(8181, '0.0.0.0');
