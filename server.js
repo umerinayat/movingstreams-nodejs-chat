@@ -224,15 +224,15 @@ sockServer.on('connection', (ws) => {
 });
 
 
-sockServer.installHandlers(httpServer, {prefix:'/random-chat'});
+sockServer.installHandlers(httpServer, {prefix:'/chat'});
 
 console.log(' [*] Listening on 0.0.0.0:8181' );
 httpServer.listen(8181, '0.0.0.0');
 
-app.get('/client.html', function (req, res) {
-    sendfile(__dirname + '/random-chat.html');
+app.get('/random-chat', function (req, res) {
+    res.sendFile(__dirname + '/client.html');
 });
 
 app.get('/style.css', function (req, res) {
-    sendfile(__dirname + '/style.css');
+    res.sendFile(__dirname + '/style.css');
 });
