@@ -230,7 +230,7 @@ console.log(' [*] Listening on 0.0.0.0:8181' );
 httpServer.listen(8181, '0.0.0.0');
 
 app.get('/client.html', function (req, res) {
-    sendfile(__dirname + '/client.html');
+    sendfile(__dirname + '/random-chat.html');
 });
 
 app.get('/style.css', function (req, res) {
