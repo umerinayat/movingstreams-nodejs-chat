@@ -9,7 +9,10 @@
   "author": "Umer Inayat",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.1",
+    "http": "0.0.1-security",
     "node-uuid": "^1.4.8",
+    "sockjs": "^0.3.21",
     "ws": "^8.2.3"
   }
 }

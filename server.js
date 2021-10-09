@@ -1,17 +1,25 @@
-const WebSocket = require('ws');
-const WebSocketServer = WebSocket.Server;
+const express = require('express');
+const http = require('http');
+const sockjs = require('sockjs');
 const uuid = require('node-uuid');
 
 const ClientSocket = require('./ClientSocket');
 const Event = require('./Event');
 
-const wss = new WebSocketServer({ port: 8181 });
+const app = express();
+const httpServer = http.createServer(app);
+const sockServer = sockjs.createServer();
+
+const CONNECTING = 0;
+const OPEN = 1;
+const CLOSING = 2;
+const CLOSED = 3;
 
 const connections = new Map();
 
 process.setMaxListeners(0);
 
-wss.on('connection', (ws) => {
+sockServer.on('connection', (ws) => {
 
     const cuuid = uuid.v4();
     const newClientSocket = new ClientSocket(cuuid, 'AnonymousUser', null, ws);
@@ -77,7 +85,7 @@ wss.on('connection', (ws) => {
 
     // wsSend('notification', client_uuid, nickname, connect_message);
 
-    ws.on('message', (message) => {
+    ws.on('data', (message) => {
         let parsedMesg = JSON.parse(message.toString());
         let clientSocket = connections.get(cuuid);
 
@@ -176,25 +184,31 @@ wss.on('connection', (ws) => {
                     message: `${clientSocket.nickname} has been disconnected`,
                     data: {
                         client: {
-                            uuid: clientSocket.privateSocket.uuid,
-                            nickname: clientSocket.privateSocket.nickname
-                        },
-                        private: {
                             uuid: clientSocket.uuid,
                             nickname: clientSocket.nickname
                         }
                     }
                 }));
 
+                clientSocket.privateSocket.privateSocket = null;
+                clientSocket.privateSocket.send(new Event({
+                    type: 'waiting',
+                    message: `Please Wait Connecting With new Friend`,
+                    data: {
+                        client: {
+                            uuid: clientSocket.privateSocket.uuid,
+                            nickname: clientSocket.privateSocket.nickname
+                        },
+                    }
+                }
+                ));
+
                 connections.delete(clientSocket.uuid);
-                connections.delete(clientSocket.privateSocket.uuid);
 
             } else {
                 connections.delete(cuuid);
             }
         }
-
-
     };
 
     ws.on('close', function () {
@@ -207,4 +221,18 @@ wss.on('connection', (ws) => {
         process.exit();
     });
 
+});
+
+
+sockServer.installHandlers(httpServer, {prefix:'/random-chat'});
+
+console.log(' [*] Listening on 0.0.0.0:8181' );
+httpServer.listen(8181, '0.0.0.0');
+
+app.get('/client.html', function (req, res) {
+    sendfile(__dirname + '/client.html');
+});
+
+app.get('/style.css', function (req, res) {
+    sendfile(__dirname + '/style.css');
 });

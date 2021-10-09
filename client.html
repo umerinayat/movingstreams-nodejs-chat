@@ -4,146 +4,104 @@
     <title>Bi-directional WebSocket Chat Demo</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="http://bit.ly/cdn-bootstrap-css" />
-    <link rel="stylesheet" href="http://bit.ly/cdn-bootstrap-theme" />
-    <script src="http://bit.ly/cdn-bootstrap-jq"></script>
+
+    <link href='/style.css' type='text/css' rel='stylesheet'>
+
   </head>
   <body lang="en">
-    <div class="vertical-center">
-      <div class="container">
-        <ul id="messages" class="list-unstyled"></ul>
-        <hr />
-        <form
-          role="form"
-          id="chat_form"
-          onsubmit="sendMessage(); return false;"
-        >
-        <p id="typingStatus"></p>
-          <div class="form-group">
-            <input
-              class="form-control"
-              type="text"
-              id="message"
-              name="message"
-              placeholder="Type text to echo in here"
-              value=""
-              autofocus
-            />
-          </div>
-          <button
-            type="button"
-            id="send"
-            class="btn btn-primary"
-            onclick="sendMessage();"
-          >
-            Send Message
-          </button>
-        </form>
-      </div>
-    </div>
-    <script src="http://bit.ly/cdn-bootstrap-minjs"></script>
+
+    <ul id="messages"></ul>
+
+    <p id="typingStatus"></p>
+    <form id="chat_form" onsubmit="sendMessage(); return false;">
+      <input
+        type="text"
+        id="message"
+        name="message"
+        id="message"
+        placeholder="Type text to echo in here"
+        value=""
+        autofocus
+      />
+      <input type="button" id="send" value="Send!" onclick="sendMessage();" />
+      <!-- <input type="button" value="Disconnect" onclick="disconnect();" /> -->
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js" integrity="sha512-ayb5R/nKQ3fgNrQdYynCti/n+GD0ybAhd3ACExcYvOR2J1o3HebiAe/P0oZDx5qwB+xkxuKG6Nc0AFTsPT/JDQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
-      var ws = new WebSocket('ws://localhost:8181');
+
+      var sockjs = new SockJS("http://localhost:8181/random-chat");
       var nickname = '';
-      ws.onopen = function (e) {
+
+      sockjs.onopen = function (e) {
         console.log('Connection to server opened');
       };
 
       var messageField = document.getElementById('message');
+      var typingStatus = document.getElementById('typingStatus');
 
-      var isConnected = false;
-
-      function appendLog(type, nickname, message) {
-        var messages = document.getElementById('messages');
-        var messageElem = document.createElement('li');
-        var preface_label;
-        if (type === 'notification') {
-          preface_label = '<span class="label label-info">*</span>';
-        } else if (type == 'nick_update') {
-          preface_label = '<span class="label label-warning">*</span>';
-        } else {
-          preface_label =
-            '<span class="label label-success">' + nickname + '</span>';
-        }
-        var message_text =
-          '<h2>' + preface_label + '&nbsp;&nbsp;' + message + '</h2>';
-        messageElem.innerHTML = message_text;
-        messages.appendChild(messageElem);
+      function appendLog(nickname, message) {
+          var messages = document.getElementById('messages');
+          var messageElem = document.createElement("li");
+          var message_text = "[" + nickname + "] - " + message;
+          messageElem.innerHTML = message_text;
+          messages.appendChild(messageElem);
       }
 
-      ws.onmessage = function (e) {
+      sockjs.onmessage = function (e) {
         var data = JSON.parse(e.data);
         data = data.event;
-        debugger
+        debugger;
 
         nickname = data.nickname;
 
-        if(data.type == 'typing') {
-
-          $('#typingStatus').text(data.message);
-
-        } else if(data.type == 'clear-typing') {
-          $('#typingStatus').text('');
-        } else if(data.type == 'waiting') {
-          console.log('wating...');
-        }
-        else if(data.type == 'connected') {
-          isConnected = true;
-          console.log('connected');
-        }
-        else {
-          appendLog(data.type, data.data.client.nickname, data.message);
+        if (data.type == 'typing') {
+         typingStatus.innerHTML  = data.message;
+        } else if (data.type == 'clear-typing') {
+         typingStatus.innerHTML = '';
+        } else if (data.type == 'waiting') {
+          appendLog('Connecting', data.message);
+        } else {
+          appendLog(data.data.client.nickname, data.message);
         }
 
-        console.log(data.client)
         console.log('ID: [%s] = %s', data.data.client.uuid, data.message);
       };
 
-      ws.onclose = function (e) {
+      sockjs.onclose = function (e) {
         appendLog('Connection closed');
         console.log('Connection closed');
+        typingStatus.innerHTML = '';
       };
 
       function sendTyping() {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({'event': 'typing'}));
-        }
+        sockjs.send(JSON.stringify({ event: 'typing' }));
       }
 
       function clearTyping() {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({'event': 'clear-typing'}));
-        }
+        sockjs.send(JSON.stringify({ event: 'clear-typing' }));
       }
 
       function sendMessage() {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({'event': 'message', message:  messageField.value}));
-        }
+          sockjs.send(
+            JSON.stringify({ event: 'message', message: messageField.value })
+          );
         messageField.value = '';
         messageField.focus();
+        clearTyping();
       }
 
-      messageField.addEventListener('keyup', function(event) {
-        if(messageField.value.length > 0) {
+      messageField.addEventListener('keyup', function (event) {
+        if (messageField.value.length > 0) {
           sendTyping();
         } else {
           clearTyping();
         }
       });
 
-    //  var handle = setInterval(function() {
-
-    //     if(!isConnected) {
-    //       if (ws.readyState === WebSocket.OPEN) {
-    //         ws.send(JSON.stringify({'event': 'reconnect', message:  ''}));
-    //       }
-    //     }
-    //   }, 800);
-
       function disconnect() {
-        ws.close();
+        sockjs.close();
       }
     </script>
   </body>

@@ -1,4 +1,4 @@
-const WebSocket = require('ws');
+const OPEN = 1;
 
 class ClientSocket {
     static index = 0;
@@ -13,8 +13,8 @@ class ClientSocket {
     }
 
     send(Event) {
-        if (this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(
+        if (this.ws.readyState === OPEN) {
+            this.ws.write(
             JSON.stringify({
                 event: Event
             })
@@ -25,6 +25,7 @@ class ClientSocket {
       setPrivateSocket(ClientSocket) {
           this.privateSocket = ClientSocket;
       }
+
 }
 
 module.exports = ClientSocket;
