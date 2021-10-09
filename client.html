@@ -133,7 +133,7 @@
       .chat .input i:hover {
         color: #333;
       }
-      .chat .input input {
+      .chat .input input[type=text] {
         border: none;
         background-image: none;
         background-color: white;
@@ -149,6 +149,18 @@
       }
       .chat .input input:placeholder {
         color: #999;
+      }
+
+      .chat .input input[type=button] {
+        border: none;
+        background-image: none;
+        background-color: white;
+        padding: 0.5rem 1rem;
+        margin-right: 1rem;
+        border-radius: 1.125rem;
+        font-family: Red hat Display, sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.025em;
       }
 
       @-webkit-keyframes typing {
@@ -197,7 +209,7 @@
        
         <form id="chat_form" onsubmit="sendMessage(); return false;" class="input">
           <input name="message" id="message" placeholder="Type your message here!" type="text" value="" autofocus />
-          <input type="button" id="send" value="Send!" onclick="sendMessage();"/>
+          <input type="button" id="send" value="Send!" onclick="sendMessage();" style="background-color: rgb(42, 39, 39);color: #fff"/>
       </form>
         
       
