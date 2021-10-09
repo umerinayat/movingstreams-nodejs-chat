@@ -116,7 +116,7 @@ sockServer.on('connection', (ws) => {
                             'Client ' + old_nickname + ' changed to ' + clientSocket.nickname;
 
                             clientSocket.send(new Event({
-                                type: 'message',
+                                type: 'notification',
                                 message: `Your named has been changed now you are <b> ${clientSocket.nickname} </b>`,
                                 data: {
                                     client: {
@@ -128,13 +128,14 @@ sockServer.on('connection', (ws) => {
 
                         if (clientSocket.privateSocket) {
                             clientSocket.privateSocket.send(new Event({
-                                type: 'message',
+                                type: 'notification',
                                 message: `Your partner <b>${old_nickname}</b> has changed their name to <b>${clientSocket.nickname}</b>`,
                                 data: {
                                     client: {
                                         uuid: clientSocket.uuid,
                                         nickname: clientSocket.nickname
-                                    }
+                                    },
+                                    private: {}
                                 }
                             }));
                         }
