@@ -260,5 +260,5 @@ console.log(' [*] Listening on 0.0.0.0:8181' );
 httpServer.listen(8181, '0.0.0.0');
 
 app.get('/random-chat', function (req, res) {
-    res.sendFile(__dirname + '/client.html');
+    res.sendFile(__dirname + '/index.html');
 });
